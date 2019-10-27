@@ -1,0 +1,2441 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="UTF-8">
+<title>Are we async yet?</title>
+<link rel="stylesheet" href="style.css">
+<link rel="icon" href="favicon.ico">
+<body>
+<h1>Are we <code>async</code> yet?</h1>
+<p>For <code>async</code> syntax, not yet, but <strong>almost</strong>!</p>
+<p>
+  Although the more ergonomic syntax is not ready yet,
+  <strong>asynchronous I/O is already possible in Rust</strong> with
+  ecosystem around <a href="https://crates.io/crates/futures">futures</a>,
+  <a href="https://crates.io/crates/mio">mio</a>, and
+  <a href="https://crates.io/crates/tokio">tokio</a>.
+</p>
+<h2><code>async</code> syntax and blockers</h2>
+<ul id="async-blockers">
+  
+    <li>
+      <code>async</code>&#x2F;<code>await</code> syntax
+        <a class="stabilized"
+          href="https://github.com/rust-lang/rust/pull/63209"
+          title="Stabilize &#96;async_await&#96; in Rust 1.39.0">stabilized in 1.39</a>
+          <span class="beta">[in beta]</span>
+        /
+        <a class="rfc"
+          href="https:&#x2F;&#x2F;rust-lang.github.io&#x2F;rfcs&#x2F;2394-async_await.html"
+          title="async&#x2F;await notation for ergonomic asynchronous IO">RFC 2394</a>
+        /
+        <a
+          class="tracking"
+          href="https://github.com/rust-lang/rust/issues/50547"
+          title="Tracking issue for async&#x2F;await (RFC 2394)"
+        >#50547</a>
+        <details class="issues">
+          <summary>
+            Related issues under <span class="label">A-async-await</span>
+          </summary>
+          <ul>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/65677"
+        title="Doucment auto traits for &#96;async fn&#96;">#65677 - Doucment auto traits for <code>async fn</code></a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/65667"
+        title="Async&#x2F;Await: Confusing error message when using non-Send type in async fn">#65667 - Async&#x2F;Await: Confusing error message when using non-Send type in async fn</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/65442"
+        title="impl Trait that does not capture generic argument">#65442 - impl Trait that does not capture generic argument</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/65436"
+        title="async&#x2F;await regression regarding borrows across yields">#65436 - async&#x2F;await regression regarding borrows across yields</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/65419"
+        title="Attempting to run an async fn after completion mentions generators">#65419 - Attempting to run an async fn after completion mentions generators</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/65409"
+        title="Suggest as_mut to reborrow Pin when calling method">#65409 - Suggest as_mut to reborrow Pin when calling method</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/65180"
+        title="Async-related type error messages defy expectations (in span location)">#65180 - Async-related type error messages defy expectations (in span location)</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/64960"
+        title="Cannot await in scope that contains call to format!">#64960 - Cannot await in scope that contains call to format!</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/64692"
+        title="No error for private type in public async fn">#64692 - No error for private type in public async fn</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/64650"
+        title="Unhelpful error &quot;one type is more general than the other&quot; in async code">#64650 - Unhelpful error &quot;one type is more general than the other&quot; in async code</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/64552"
+        title="Lifetime bounds in auto trait impls prevent trait from being implemented on generators">#64552 - Lifetime bounds in auto trait impls prevent trait from being implemented on generators</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/64286"
+        title="EXPERIMENT: Make &#96;async fn&#96;, &#96;.await&#96;, &#96;async move? {&#96; legal on 2015">#64286 - EXPERIMENT: Make <code>async fn</code>, <code>.await</code>, <code>async move? {</code> legal on 2015</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/64176"
+        title="Lifetime error when Send is enforced on async function return type">#64176 - Lifetime error when Send is enforced on async function return type</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/64130"
+        title="non-send futures error at point of use, but could cite point of definition in some cases">#64130 - non-send futures error at point of use, but could cite point of definition in some cases</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/63818"
+        title="Resolve unsound interaction between self-referential generators (incl. async fn) and noalias">#63818 - Resolve unsound interaction between self-referential generators (incl. async fn) and noalias</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/63768"
+        title="An async fn which isn&#x27;t Send but which should be?">#63768 - An async fn which isn&#x27;t Send but which should be?</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/63647"
+        title="inline attribute on async fn doesn&#x27;t work properly">#63647 - inline attribute on async fn doesn&#x27;t work properly</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/63526"
+        title="Include type parameters on string representation of &#96;impl Trait&#96;">#63526 - Include type parameters on string representation of <code>impl Trait</code></a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/63514"
+        title="Provide map_ok and map_err method for Poll&lt;Option&lt;Result&lt;T, E&gt;&gt;&gt;">#63514 - Provide map_ok and map_err method for Poll&lt;Option&lt;Result&lt;T, E&gt;&gt;&gt;</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/63502"
+        title="Error &quot;cannot infer type&quot; when using &#x27;?&#x27; in async block + bad diagnostic">#63502 - Error &quot;cannot infer type&quot; when using &#x27;?&#x27; in async block + bad diagnostic</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/63385"
+        title="Unhelpful error message with async usage of Iterator">#63385 - Unhelpful error message with async usage of Iterator</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/63033"
+        title="Async fn does not compile if lifetime does not appear in bounds (sometimes)">#63033 - Async fn does not compile if lifetime does not appear in bounds (sometimes)</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/63032"
+        title="Lifetime is unnecessarily captured in nested functions returning impl trait via async">#63032 - Lifetime is unnecessarily captured in nested functions returning impl trait via async</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/62958"
+        title="Async fn doubles argument size">#62958 - Async fn doubles argument size</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/62918"
+        title="Remove TLS dependency from async&#x2F;await">#62918 - Remove TLS dependency from async&#x2F;await</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/62572"
+        title="Pretty-printing support for Rust generators">#62572 - Pretty-printing support for Rust generators</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/62570"
+        title="Async blocks are leaky about wording wrt. &#96;?&#96; in diagnostics">#62570 - Async blocks are leaky about wording wrt. <code>?</code> in diagnostics</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/62386"
+        title="Invalid suggestion when attempting to call async closure">#62386 - Invalid suggestion when attempting to call async closure</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/62290"
+        title="Tracking issue for &#96;#!feature(async_closure)]&#96; (RFC 2394)">#62290 - Tracking issue for <code>#!feature(async_closure)]</code> (RFC 2394)</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/62284"
+        title="Mutually recursive &#96;async fn&#96;s are hard to make &#96;Send&#96;">#62284 - Mutually recursive <code>async fn</code>s are hard to make <code>Send</code></a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/62097"
+        title="rustc suggests invalid syntax to fix lifetime inferring error">#62097 - rustc suggests invalid syntax to fix lifetime inferring error</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/61949"
+        title="Inherent async fn returning &#96;Self&#96; treats type&#x27;s lifetime parameters as &#96;&#x27;static&#96;">#61949 - Inherent async fn returning <code>Self</code> treats type&#x27;s lifetime parameters as <code>&#x27;static</code></a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/61482"
+        title="A &#96;rustc&#96;-internal compile error on future and task API">#61482 - A <code>rustc</code>-internal compile error on future and task API</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/61335"
+        title="ICE when combining unsized locals and async">#61335 - ICE when combining unsized locals and async</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/61076"
+        title="suggest &#96;await&#96; for future-related type errors">#61076 - suggest <code>await</code> for future-related type errors</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/60889"
+        title="Don&#x27;t ignore generator fields in miri">#60889 - Don&#x27;t ignore generator fields in miri</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/60658"
+        title="Wrong Send constraint when using a trait with lifetime + associated type in async">#60658 - Wrong Send constraint when using a trait with lifetime + associated type in async</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/59971"
+        title="async&#x2F;await: cannot move out of captured variable in an &#96;Fn&#96; closure">#59971 - async&#x2F;await: cannot move out of captured variable in an <code>Fn</code> closure</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/59337"
+        title="async closures have concrete argument lifetimes">#59337 - async closures have concrete argument lifetimes</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/59245"
+        title="Inconsistency in Send&#x2F;Sync requirements for async&#x2F;await ">#59245 - Inconsistency in Send&#x2F;Sync requirements for async&#x2F;await </a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/59087"
+        title="Generator size: borrowed variables are assumed live across following yield points">#59087 - Generator size: borrowed variables are assumed live across following yield points</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/57017"
+        title="async&#x2F;await: awaiting inside a match block captures borrow too eagerly">#57017 - async&#x2F;await: awaiting inside a match block captures borrow too eagerly</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/56974"
+        title="Cannot define async fn with no_std">#56974 - Cannot define async fn with no_std</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/54326"
+        title="Mismatched types diagnostic for async fn return type trusts random returns over function signature">#54326 - Mismatched types diagnostic for async fn return type trusts random returns over function signature</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/52924"
+        title="Generators are too big">#52924 - Generators are too big</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/51932"
+        title="Weird async&#x2F;await error message around mutablility">#51932 - Weird async&#x2F;await error message around mutablility</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/65159"
+        title="Nightly async fn ICE">#65159 - Nightly async fn ICE</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/65147"
+        title="check_mod_item_types query times regressed bigly">#65147 - check_mod_item_types query times regressed bigly</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/64853"
+        title="Should async&#x2F;await be strict keywords?">#64853 - Should async&#x2F;await be strict keywords?</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/64636"
+        title="async functions with &#96;unimplemented!()&#96; are marked as unreachable">#64636 - async functions with <code>unimplemented!()</code> are marked as unreachable</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/64630"
+        title="Async struct method, &lt;_&#x27;&gt; lifetime shadowing">#64630 - Async struct method, &lt;_&#x27;&gt; lifetime shadowing</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/64512"
+        title="async fn drop order for temporaries in return expression does not match sync">#64512 - async fn drop order for temporaries in return expression does not match sync</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/64493"
+        title="Spurious &quot;unused lifetime parameter&quot; warning with async function">#64493 - Spurious &quot;unused lifetime parameter&quot; warning with async function</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/64477"
+        title="Spurious new Send requirement in async block">#64477 - Spurious new Send requirement in async block</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/64433"
+        title="Lifetime errors on nightly-2019-09-11 but not nightly-2019-09-10">#64433 - Lifetime errors on nightly-2019-09-11 but not nightly-2019-09-10</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/64392"
+        title="Async function return type inference fails without an ending return">#64392 - Async function return type inference fails without an ending return</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/64391"
+        title="async functions fail to move values into generated futures in the latest nightly">#64391 - async functions fail to move values into generated futures in the latest nightly</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/64382"
+        title="Consider async blocks on lifetime errors">#64382 - Consider async blocks on lifetime errors</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/64004"
+        title="async-await: mutually recursive functions compile sometimes">#64004 - async-await: mutually recursive functions compile sometimes</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/63832"
+        title="temporary lifetime around await is (maybe) unexpectedly short">#63832 - temporary lifetime around await is (maybe) unexpectedly short</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/63778"
+        title="Temporary values do not outlive a direct await">#63778 - Temporary values do not outlive a direct await</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/63716"
+        title="[bug] async specialization is not parsed">#63716 - [bug] async specialization is not parsed</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/63710"
+        title="rustdoc renders re-exported &#96;async fn&#96;s incorrectly">#63710 - rustdoc renders re-exported <code>async fn</code>s incorrectly</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/63533"
+        title="Improve error message for &#96;.await&#96; in 2015 edition">#63533 - Improve error message for <code>.await</code> in 2015 edition</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/63500"
+        title="async fn methods and impl &#96;&#x27;_&#96; elision do not interact correctly">#63500 - async fn methods and impl <code>&#x27;_</code> elision do not interact correctly</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/63398"
+        title="Wrong block referenced when emitting E0728">#63398 - Wrong block referenced when emitting E0728</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/63391"
+        title="Improve diagnostic for &#96;break&#96; in &#96;async { ... }&#96; block">#63391 - Improve diagnostic for <code>break</code> in <code>async { ... }</code> block</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/63388"
+        title="&#96;&amp;self&#96; lifetime elision with two parameters does not work with &#96;async fn&#96;">#63388 - <code>&amp;self</code> lifetime elision with two parameters does not work with <code>async fn</code></a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/63277"
+        title="Different error messages between async and regular functions">#63277 - Different error messages between async and regular functions</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/63225"
+        title="Error with nested async fn and anonymous lifetimes">#63225 - Error with nested async fn and anonymous lifetimes</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/63167"
+        title="Confusing error message with type unification of impl Traits">#63167 - Confusing error message with type unification of impl Traits</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/63100"
+        title="&quot;Try invoking the function&quot; hint">#63100 - &quot;Try invoking the function&quot; hint</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/62658"
+        title="ICE: assertion failed: &#96;(left == right)&#96; in type_of.rs">#62658 - ICE: assertion failed: <code>(left == right)</code> in type_of.rs</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/62566"
+        title="include material on async fn in the Rust reference">#62566 - include material on async fn in the Rust reference</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/62539"
+        title="diagnostic for naive recursive async functions is really unfriendly">#62539 - diagnostic for naive recursive async functions is really unfriendly</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/62517"
+        title="async fn with elided lifetime causes rustc panic">#62517 - async fn with elided lifetime causes rustc panic</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/62506"
+        title="ICE on generator type check with a must_use type">#62506 - ICE on generator type check with a must_use type</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/62501"
+        title="Tracking issue for &#96;#!feature(async_unsafe)]&#96; (RFC 2394)">#62501 - Tracking issue for <code>#!feature(async_unsafe)]</code> (RFC 2394)</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/62500"
+        title="move async unsafe fn to distinct feature gate">#62500 - move async unsafe fn to distinct feature gate</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/62382"
+        title="Unhelpful span in async type inference error">#62382 - Unhelpful span in async type inference error</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/62312"
+        title="Future compat warning with &#96;.await&#96;ing a &#96;BoxFuture&#96;">#62312 - Future compat warning with <code>.await</code>ing a <code>BoxFuture</code></a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/62236"
+        title="Move tests in &#96;src&#x2F;test&#x2F;run-pass&#x2F;async-await&#96; -&gt; &#96;src&#x2F;test&#x2F;ui&#x2F;async-await&#96;">#62236 - Move tests in <code>src&#x2F;test&#x2F;run-pass&#x2F;async-await</code> -&gt; <code>src&#x2F;test&#x2F;ui&#x2F;async-await</code></a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/62232"
+        title="Inconsistent syntax between &#96;unsafe async fn&#96; and &#96;async fn unsafe&#96;">#62232 - Inconsistent syntax between <code>unsafe async fn</code> and <code>async fn unsafe</code></a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/62214"
+        title="Split the &#96;async_await&#96; feature gate for the subset we want to stabilize">#62214 - Split the <code>async_await</code> feature gate for the subset we want to stabilize</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/62149"
+        title="[Stabilization] async&#x2F;await MVP">#62149 - [Stabilization] async&#x2F;await MVP</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/62121"
+        title="increase test coverage for async-await">#62121 - increase test coverage for async-await</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/62087"
+        title="Async&#x2F;Await rustc assertion panic">#62087 - Async&#x2F;Await rustc assertion panic</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/62028"
+        title="thread &#x27;rustc&#x27; panicked at &#x27;assertion failed: target_offset &gt;= offset&#x27;">#62028 - thread &#x27;rustc&#x27; panicked at &#x27;assertion failed: target_offset &gt;= offset&#x27;</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/62025"
+        title="Broken MIR: generator contains type std::vec::Vec&lt;()&gt;">#62025 - Broken MIR: generator contains type std::vec::Vec&lt;()&gt;</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/62009"
+        title="ICE when playing with async&#x2F;await.">#62009 - ICE when playing with async&#x2F;await.</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/61991"
+        title="Can&#x27;t infer type after collecting an iterator of futures">#61991 - Can&#x27;t infer type after collecting an iterator of futures</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/61986"
+        title="ICE compiling with futures compat">#61986 - ICE compiling with futures compat</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/61950"
+        title="Async function using non-across-yield non-Send value is Send only if the usage is inside curly brackets">#61950 - Async function using non-across-yield non-Send value is Send only if the usage is inside curly brackets</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/61920"
+        title="E0373 help suggests &#96;move async&#96; but the correct syntax is &#96;async move&#96;">#61920 - E0373 help suggests <code>move async</code> but the correct syntax is <code>async move</code></a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/61910"
+        title="error: internal compiler error: broken MIR in DefId ...">#61910 - error: internal compiler error: broken MIR in DefId ...</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/61906"
+        title="Since rust is not going in CPS style coroutine, where is the context carrier for async?">#61906 - Since rust is not going in CPS style coroutine, where is the context carrier for async?</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/61834"
+        title="Broken MIR: generator contains type impl std::future::Future in MIR, but typeck only knows about {impl std::future::Future, ()}">#61834 - Broken MIR: generator contains type impl std::future::Future in MIR, but typeck only knows about {impl std::future::Future, ()}</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/61798"
+        title="&#96;unreachable_code&#96; warning when invoke &#96;.await&#96; on async diverging function">#61798 - <code>unreachable_code</code> warning when invoke <code>.await</code> on async diverging function</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/61793"
+        title="Codegen ICE&#x2F;regression with 2019-06-12 nightly when using async fn&lt;T: Fn()&gt;(&amp;self, T)">#61793 - Codegen ICE&#x2F;regression with 2019-06-12 nightly when using async fn&lt;T: Fn()&gt;(&amp;self, T)</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/61770"
+        title="Broken MIR: generator contains type">#61770 - Broken MIR: generator contains type</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/61731"
+        title="&quot;Broken MIR&quot; ICE when using runtime crate">#61731 - &quot;Broken MIR&quot; ICE when using runtime crate</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/61685"
+        title="Rustc paniced when apply &#96;.await&#96; on a closure in a non-async function">#61685 - Rustc paniced when apply <code>.await</code> on a closure in a non-async function</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/61664"
+        title="compiler panicked at &#x27;Box&lt;Any&gt;&#x27;">#61664 - compiler panicked at &#x27;Box&lt;Any&gt;&#x27;</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/61579"
+        title="ICE: Broken MIR in generators">#61579 - ICE: Broken MIR in generators</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/61452"
+        title="[ICE] async fn vs lint order">#61452 - [ICE] async fn vs lint order</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/61442"
+        title="Broken MIR in futures generator (async&#x2F;await)">#61442 - Broken MIR in futures generator (async&#x2F;await)</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/61211"
+        title="async&#x2F;await borrows more around await points than necessary">#61211 - async&#x2F;await borrows more around await points than necessary</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/61187"
+        title="Internal compiler error in nightly when reversing a vector inside a async fn">#61187 - Internal compiler error in nightly when reversing a vector inside a async fn</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/61115"
+        title="unused-lifetimes lint false-positives with async functions">#61115 - unused-lifetimes lint false-positives with async functions</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/61072"
+        title="async fn + rustfmt don&#x27;t &quot;just work&quot; inside of RLS">#61072 - async fn + rustfmt don&#x27;t &quot;just work&quot; inside of RLS</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/60797"
+        title="improve the &quot;must use&quot; lint for &#96;Future&#96; to suggest await">#60797 - improve the &quot;must use&quot; lint for <code>Future</code> to suggest await</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/60709"
+        title="future miscompiling to ud2">#60709 - future miscompiling to ud2</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/60674"
+        title="Async fn loses mut pattern when passed to attribute macro">#60674 - Async fn loses mut pattern when passed to attribute macro</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/60661"
+        title="HIR printing of &#96;async fn&#96; is broken">#60661 - HIR printing of <code>async fn</code> is broken</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/60660"
+        title="std::r#await! macro cannot be used even if #![feature(await_macro)] is enabled">#60660 - std::r#await! macro cannot be used even if #![feature(await_macro)] is enabled</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/60655"
+        title="&#96;existential type&#96; complains about &#96;&#x27;_&#96; in concrete type of self-borrowing generators">#60655 - <code>existential type</code> complains about <code>&#x27;_</code> in concrete type of self-borrowing generators</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/60653"
+        title="Make the parser aware of await where macro calls are expected">#60653 - Make the parser aware of await where macro calls are expected</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/60645"
+        title="Are blanket Future impls necessary?">#60645 - Are blanket Future impls necessary?</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/60615"
+        title="async&#x2F;await unresolved type parameter in generator error shouldn&#x27;t refer to &#96;yield&#96;">#60615 - async&#x2F;await unresolved type parameter in generator error shouldn&#x27;t refer to <code>yield</code></a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/60613"
+        title="Provide appropriate suggestions for some of the discussed await syntaxes">#60613 - Provide appropriate suggestions for some of the discussed await syntaxes</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/60610"
+        title="Remove await! macro-like syntax support">#60610 - Remove await! macro-like syntax support</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/60589"
+        title="Is async&#x2F;await compatible with io_uring (Linux async io)?">#60589 - Is async&#x2F;await compatible with io_uring (Linux async io)?</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/60566"
+        title="async fn raises unused_mut on parameter that is used mutably">#60566 - async fn raises unused_mut on parameter that is used mutably</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/60518"
+        title="ICE with the newest nightly in &#96;lower_ty_direct&#96;">#60518 - ICE with the newest nightly in <code>lower_ty_direct</code></a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/60509"
+        title="Extend &#96;async fn&#96; test suite to account for &#96;ref mut?&#96; patterns">#60509 - Extend <code>async fn</code> test suite to account for <code>ref mut?</code> patterns</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/60498"
+        title="async fn forgets the mutability of the arguments">#60498 - async fn forgets the mutability of the arguments</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/60438"
+        title="__arg variables from async fn desugaring are accessible to the user">#60438 - __arg variables from async fn desugaring are accessible to the user</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/60424"
+        title="type inference doesn&#x27;t work in async fn that return Box&lt;dyn SomeTrait&gt;">#60424 - type inference doesn&#x27;t work in async fn that return Box&lt;dyn SomeTrait&gt;</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/60418"
+        title="Move async&#x2F;await UI tests into a folder">#60418 - Move async&#x2F;await UI tests into a folder</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/60414"
+        title="Using associated types in async fn type break typing">#60414 - Using associated types in async fn type break typing</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/60236"
+        title="Drop order of async fn arguments doesn&#x27;t exactly match the equivalent regular fn.">#60236 - Drop order of async fn arguments doesn&#x27;t exactly match the equivalent regular fn.</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/60203"
+        title="Async fns that take structs with elided lifetime parameters are broken.">#60203 - Async fns that take structs with elided lifetime parameters are broken.</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/60069"
+        title="Can define and use async fn without feature gate on nightly">#60069 - Can define and use async fn without feature gate on nightly</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/60016"
+        title="Implement &#96;await&#96; syntax">#60016 - Implement <code>await</code> syntax</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/59972"
+        title="Futures involving uninhabited variables are incorrectly considered uninhabited.">#59972 - Futures involving uninhabited variables are incorrectly considered uninhabited.</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/59313"
+        title="&#96;async move&#96; breaks doc tests">#59313 - <code>async move</code> breaks doc tests</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/59123"
+        title="Generator size: unwinding and drops force extra generator state allocation">#59123 - Generator size: unwinding and drops force extra generator state allocation</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/59113"
+        title="Tracking issue for RFC 2592, futures_api">#59113 - Tracking issue for RFC 2592, futures_api</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/59001"
+        title="async: hidden type for &#96;impl Trait&#96; captures lifetime that does not appear in bounds">#59001 - async: hidden type for <code>impl Trait</code> captures lifetime that does not appear in bounds</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/58945"
+        title="internal compiler error: Trying to create type name for unexpected type [debuginfo]">#58945 - internal compiler error: Trying to create type name for unexpected type [debuginfo]</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/58930"
+        title="async&#x2F;await produces unspecific &quot;type inside generator must be known in this context&quot; error messages">#58930 - async&#x2F;await produces unspecific &quot;type inside generator must be known in this context&quot; error messages</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/58888"
+        title="ICE unexpected type in type_metadata: impl core::future::future::Future">#58888 - ICE unexpected type in type_metadata: impl core::future::future::Future</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/58885"
+        title="async&#x2F;await: Usage of trait objects reports multiple different lifetimes when only one is used">#58885 - async&#x2F;await: Usage of trait objects reports multiple different lifetimes when only one is used</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/58884"
+        title="async&#x2F;await: Potentially incorrect lifetime handling when structs with lifetimes are referenced">#58884 - async&#x2F;await: Potentially incorrect lifetime handling when structs with lifetimes are referenced</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/58814"
+        title="Playing with async triggers compiler bug &quot;TLS Waker not set&quot;">#58814 - Playing with async triggers compiler bug &quot;TLS Waker not set&quot;</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/58652"
+        title="async fn should be disallowed entirely on 2015 edition">#58652 - async fn should be disallowed entirely on 2015 edition</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/58639"
+        title="expected signature of &#96;for&lt;&#x27;r, &#x27;s&gt; fn(&amp;&#x27;r mut std::task::Context&lt;&#x27;s&gt;)">#58639 - expected signature of &#96;for&lt;&#x27;r, &#x27;s&gt; fn(&amp;&#x27;r mut std::task::Context&lt;&#x27;s&gt;)</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/58027"
+        title="Rustdoc renders async fn incorrectly">#58027 - Rustdoc renders async fn incorrectly</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/57640"
+        title="Resolve &#96;await&#96; syntax">#57640 - Resolve <code>await</code> syntax</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/57084"
+        title="ICE(async_await,futures_api,await_macro,generators): cannot relate bound region: ReLateBound(DebruijnIndex(1), BrAnon(2)) &lt;= &#x27;_#1r">#57084 - ICE(async_await,futures_api,await_macro,generators): cannot relate bound region: ReLateBound(DebruijnIndex(1), BrAnon(2)) &lt;= &#x27;_#1r</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/57036"
+        title="async&#x2F;await: Sending Waker seems to invalidate it">#57036 - async&#x2F;await: Sending Waker seems to invalidate it</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/56767"
+        title="await macro is not in libcore.">#56767 - await macro is not in libcore.</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/56651"
+        title="Obscure compiler panic with async&#x2F;await">#56651 - Obscure compiler panic with async&#x2F;await</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/56238"
+        title="async fn should support multiple lifetimes">#56238 - async fn should support multiple lifetimes</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/55809"
+        title="Mixing async functions and &amp;mut leads to overflow evaluating requirement">#55809 - Mixing async functions and &amp;mut leads to overflow evaluating requirement</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/55324"
+        title="&#96;async fn&#96; doesn&#x27;t capture lifetimes of type parameters if other lifetimes are present">#55324 - <code>async fn</code> doesn&#x27;t capture lifetimes of type parameters if other lifetimes are present</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/54974"
+        title="async fn: &#x27;static lifetime not inferred for Arc trait object">#54974 - async fn: &#x27;static lifetime not inferred for Arc trait object</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/54716"
+        title="Unused arguments to async fn are dropped too early">#54716 - Unused arguments to async fn are dropped too early</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/54289"
+        title="ICE with async_await + extern crate + invalid import">#54289 - ICE with async_await + extern crate + invalid import</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/53989"
+        title="compile async await function error">#53989 - compile async await function error</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/53714"
+        title="&#96;async fn&#96; inside inherent impl produces generic parse error on 2015 edition">#53714 - <code>async fn</code> inside inherent impl produces generic parse error on 2015 edition</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/53548"
+        title="async&#x2F;await: “the requirement &#96;for&lt;&#x27;r&gt; &#x27;r : &#x27;static&#96; is not satisfied” with &#96;&#x27;static&#96; across await point">#53548 - async&#x2F;await: “the requirement <code>for&lt;&#x27;r&gt; &#x27;r : &#x27;static</code> is not satisfied” with <code>&#x27;static</code> across await point</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/53447"
+        title="ICE with --pretty=expanded and async&#x2F;await">#53447 - ICE with --pretty=expanded and async&#x2F;await</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/53259"
+        title="Missing detection of Send for async fn">#53259 - Missing detection of Send for async fn</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/53249"
+        title="async&#x2F;await assertion failed: unbounded recursion">#53249 - async&#x2F;await assertion failed: unbounded recursion</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/51995"
+        title="ICE in generator MIR generated by async&#x2F;await">#51995 - ICE in generator MIR generated by async&#x2F;await</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/51933"
+        title="async fn inside fn fails to parse">#51933 - async fn inside fn fails to parse</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/51751"
+        title="async&#x2F;await errors should not discuss &quot;yield statements&quot;">#51751 - async&#x2F;await errors should not discuss &quot;yield statements&quot;</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/51353"
+        title="&#x27;assertion failed: current_depth &gt; ty::DebruijnIndex::INNERMOST&#x27; when using generators">#51353 - &#x27;assertion failed: current_depth &gt; ty::DebruijnIndex::INNERMOST&#x27; when using generators</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/50659"
+        title="Suggestion for E0627&#x27;s message">#50659 - Suggestion for E0627&#x27;s message</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/50547"
+        title="Tracking issue for async&#x2F;await (RFC 2394)">#50547 - Tracking issue for async&#x2F;await (RFC 2394)</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/50458"
+        title="Implement DerefAsync and DerefMutAsync as Deref and DerefMut in async context">#50458 - Implement DerefAsync and DerefMutAsync as Deref and DerefMut in async context</a>
+  </li>
+          </ul>
+        </details>
+    </li>
+    <li>
+      <code>std::task</code> and <code>std::future</code>
+        <a class="stabilized"
+          href="https://github.com/rust-lang/rust/pull/59739"
+          title="Stabilize futures_api">stabilized in 1.36</a>
+          <span class="stable">[in stable]</span>
+        /
+        <a class="rfc"
+          href="https:&#x2F;&#x2F;rust-lang.github.io&#x2F;rfcs&#x2F;2592-futures.html"
+          title="RFC: stabilize &#96;std::task&#96; and &#96;std::future::Future&#96;">RFC 2592</a>
+        /
+        <a
+          class="tracking"
+          href="https://github.com/rust-lang/rust/issues/59113"
+          title="Tracking issue for RFC 2592, futures_api"
+        >#59113</a>
+    </li>
+    <li>
+      Pin APIs
+        <a class="stabilized"
+          href="https://github.com/rust-lang/rust/pull/56939"
+          title="Pin stabilization">stabilized in 1.33</a>
+          <span class="stable">[in stable]</span>
+        /
+        <a class="rfc"
+          href="https:&#x2F;&#x2F;rust-lang.github.io&#x2F;rfcs&#x2F;2349-pin.html"
+          title="Standard library API for immovable types">RFC 2349</a>
+        /
+        <a
+          class="tracking"
+          href="https://github.com/rust-lang/rust/issues/49150"
+          title="Tracking issue for Pin APIs (RFC 2349)"
+        >#49150</a>
+    </li>
+    <li>
+      <code>Pin</code> as a method receiver
+        <a class="stabilized"
+          href="https://github.com/rust-lang/rust/pull/56805"
+          title="Stabilize &#96;Rc&#96;, &#96;Arc&#96; and &#96;Pin&#96; as method receivers">stabilized in 1.33</a>
+          <span class="stable">[in stable]</span>
+        /
+        <a class="rfc"
+          href="https:&#x2F;&#x2F;github.com&#x2F;rust-lang&#x2F;rfcs&#x2F;pull&#x2F;2362"
+          title="Custom self types">RFC 2362</a>
+        /
+        <a
+          class="tracking"
+          href="https://github.com/rust-lang/rust/issues/55786"
+          title="[Stabilization] Stablize using some arbitrary self types defined in std"
+        >#55786</a>
+    </li>
+    <li>
+      2018 edition
+        <a class="stabilized"
+          href="https://github.com/rust-lang/rust/pull/54057"
+          title="Stabilize edition 2018; also updates Clippy, RLS and Cargo">stabilized in 1.31</a>
+          <span class="stable">[in stable]</span>
+    </li>
+    <li>
+      <code>async</code> as a keyword in 2018 edition
+        <a class="stabilized"
+          href="https://github.com/rust-lang/rust/pull/50307"
+          title="Implement edition hygiene for keywords">stabilized in 1.28</a>
+          <span class="stable">[in stable]</span>
+    </li>
+    <li>
+      <code>impl Trait</code> in return position
+        <a class="stabilized"
+          href="https://github.com/rust-lang/rust/pull/49255"
+          title="Stabilize impl Trait">stabilized in 1.26</a>
+          <span class="stable">[in stable]</span>
+        /
+        <a class="rfc"
+          href="https:&#x2F;&#x2F;rust-lang.github.io&#x2F;rfcs&#x2F;1522-conservative-impl-trait.html"
+          title="Minimal &#96;impl Trait&#96;">RFC 1522</a>
+        /
+        <a
+          class="tracking"
+          href="https://github.com/rust-lang/rust/issues/34511"
+          title="Tracking issue for &#96;impl Trait&#96; (RFC 1522, RFC 1951, RFC 2071)"
+        >#34511</a>
+        <details class="issues">
+          <summary>
+            Related issues under <span class="label">A-impl-trait</span>
+          </summary>
+          <ul>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/65805"
+        title="impl Trait does not capture lifetime of generic argument">#65805 - impl Trait does not capture lifetime of generic argument</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/65581"
+        title="Rustc panics (NoSolution): could not prove Binder(projection soup)">#65581 - Rustc panics (NoSolution): could not prove Binder(projection soup)</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/65561"
+        title="ICE when using &#x27;impl Trait&#x27; with an infinity recursive function">#65561 - ICE when using &#x27;impl Trait&#x27; with an infinity recursive function</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/65442"
+        title="impl Trait that does not capture generic argument">#65442 - impl Trait that does not capture generic argument</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/64848"
+        title="ICE: Associated constant and impl trait">#64848 - ICE: Associated constant and impl trait</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/64548"
+        title="Incorrect compiler hint for complicated type handler">#64548 - Incorrect compiler hint for complicated type handler</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/63355"
+        title="ICE with type_alias_impl_trait: errors selecting obligation during MIR typeck">#63355 - ICE with type_alias_impl_trait: errors selecting obligation during MIR typeck</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/63279"
+        title="ICE: instantiated twice">#63279 - ICE: instantiated twice</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/63263"
+        title="ICE with closure return type as impl trait type alias defining use">#63263 - ICE with closure return type as impl trait type alias defining use</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/63205"
+        title="Investigate diagnostics regarding type alias &#96;impl Trait&#96;">#63205 - Investigate diagnostics regarding type alias <code>impl Trait</code></a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/63204"
+        title="Investigate whether &#96;Ty&#96; and &#96;OpaqueTy&#96; can be merged">#63204 - Investigate whether <code>Ty</code> and <code>OpaqueTy</code> can be merged</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/63169"
+        title="impl trait in type aliases does not trigger &quot;private type in public interface&quot; errors">#63169 - impl trait in type aliases does not trigger &quot;private type in public interface&quot; errors</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/63154"
+        title="Associated types, impl traits ~and closures~; oh my, an ICE.">#63154 - Associated types, impl traits ~and closures~; oh my, an ICE.</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/63066"
+        title="Meta tracking issue for &#96;impl Trait&#96;">#63066 - Meta tracking issue for <code>impl Trait</code></a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/63065"
+        title="Tracking issue for &#96;impl Trait&#96; in &#96;const&#96; and &#96;static&#96; items and &#96;let&#96; bindings">#63065 - Tracking issue for <code>impl Trait</code> in <code>const</code> and <code>static</code> items and <code>let</code> bindings</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/63063"
+        title="Tracking issue for RFC 2515, &quot;Permit impl Trait in type aliases&quot;">#63063 - Tracking issue for RFC 2515, &quot;Permit impl Trait in type aliases&quot;</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/63032"
+        title="Lifetime is unnecessarily captured in nested functions returning impl trait via async">#63032 - Lifetime is unnecessarily captured in nested functions returning impl trait via async</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/62988"
+        title="Existential types have issues with lifetimes">#62988 - Existential types have issues with lifetimes</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/62779"
+        title="Cross-crate re-export produces invalid rustdoc for impl Trait">#62779 - Cross-crate re-export produces invalid rustdoc for impl Trait</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/62223"
+        title="Can&#x27;t use &#96;impl Fn&#96; to return a closure that returns another closure">#62223 - Can&#x27;t use <code>impl Fn</code> to return a closure that returns another closure</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/61997"
+        title="Tracking issue for member constraints in region inference">#61997 - Tracking issue for member constraints in region inference</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/61773"
+        title="&#96;impl_trait_in_bindings&#96; and pick-constraint region bounds">#61773 - <code>impl_trait_in_bindings</code> and pick-constraint region bounds</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/61577"
+        title="cycle error building rustc with debug logging">#61577 - cycle error building rustc with debug logging</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/61271"
+        title="Handle type error caused by returning specific type that would be solved by using impl Trait">#61271 - Handle type error caused by returning specific type that would be solved by using impl Trait</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/60855"
+        title="Should improper_ctypes pierce through impl Trait?">#60855 - Should improper_ctypes pierce through impl Trait?</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/60725"
+        title="Compiling is signification slower with long return position impl types">#60725 - Compiling is signification slower with long return position impl types</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/60670"
+        title="Tracking issue for existential lifetimes">#60670 - Tracking issue for existential lifetimes</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/60473"
+        title="ICE impl_trait_in_bindings with elided lifetime">#60473 - ICE impl_trait_in_bindings with elided lifetime</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/60249"
+        title="Compiler fails to identify type mismatch on function that returns impl Trait">#60249 - Compiler fails to identify type mismatch on function that returns impl Trait</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/59631"
+        title="Recursive static with impl Trait errors out early">#59631 - Recursive static with impl Trait errors out early</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/59365"
+        title="Function with impl trait in argument position does not see all impls of trait on value returned from function with impl trait in return position">#59365 - Function with impl trait in argument position does not see all impls of trait on value returned from function with impl trait in return position</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/59342"
+        title="Existential types for traits without generic type parameters make rustc panic">#59342 - Existential types for traits without generic type parameters make rustc panic</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/59023"
+        title="impl Trait with &lt; as Trait&gt;::Type syntax does not work in return position">#59023 - impl Trait with &lt; as Trait&gt;::Type syntax does not work in return position</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/58956"
+        title="ICE with &#96;impl_trait_in_bindings&#96; when &#96;Wrap&#96;ped">#58956 - ICE with <code>impl_trait_in_bindings</code> when <code>Wrap</code>ped</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/58817"
+        title="Upgrading nightly introduces compiler panic at visit_opaque_types">#58817 - Upgrading nightly introduces compiler panic at visit_opaque_types</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/58662"
+        title="existential Generator + lifetime type errors unless impl trait wrapper is used">#58662 - existential Generator + lifetime type errors unless impl trait wrapper is used</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/58624"
+        title="rustdoc can&#x27;t handle existential types">#58624 - rustdoc can&#x27;t handle existential types</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/58504"
+        title="nightly compiler panic with type-annotated array of &#96;impl Generator&#96;">#58504 - nightly compiler panic with type-annotated array of <code>impl Generator</code></a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/58011"
+        title="cargo doc fails to compile existential associated types">#58011 - cargo doc fails to compile existential associated types</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/57961"
+        title="Defining scope of &#96;existential type&#96; defined by associated type">#57961 - Defining scope of <code>existential type</code> defined by associated type</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/57807"
+        title="Compiler fails to unify existential associated type">#57807 - Compiler fails to unify existential associated type</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/57611"
+        title="ICE when inferring the type of existential type with trait alias bounds">#57611 - ICE when inferring the type of existential type with trait alias bounds</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/57266"
+        title="Error message for type mismatch between impl Traits needs better explanation">#57266 - Error message for type mismatch between impl Traits needs better explanation</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/57201"
+        title="Broken MIR impl_trait_in_bindings ICE">#57201 - Broken MIR impl_trait_in_bindings ICE</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/57200"
+        title="NLL impl_trait_in_bindings ICE">#57200 - NLL impl_trait_in_bindings ICE</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/57188"
+        title="Existential type captures lifetime that doesn&#x27;t appear in bounds even though it does appear">#57188 - Existential type captures lifetime that doesn&#x27;t appear in bounds even though it does appear</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/56711"
+        title="Recursive call passes &#96;cargo check&#96; but fails with &#96;cargo build&#96;">#56711 - Recursive call passes <code>cargo check</code> but fails with <code>cargo build</code></a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/55997"
+        title="Cycle detected when processing existential type">#55997 - Cycle detected when processing existential type</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/55634"
+        title="Cyclic dependency bug processing RPIT &#96;impl Trait&#96;">#55634 - Cyclic dependency bug processing RPIT <code>impl Trait</code></a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/55535"
+        title="&quot;does not live long enough&quot; when returning Option&lt;impl trait&gt;">#55535 - &quot;does not live long enough&quot; when returning Option&lt;impl trait&gt;</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/55234"
+        title="impl_trait_in_bindings incremental compilation ICE">#55234 - impl_trait_in_bindings incremental compilation ICE</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/55099"
+        title="Incorrect inference of lifetime bound for existential type">#55099 - Incorrect inference of lifetime bound for existential type</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/55022"
+        title="Issue with impl Trait and panic!()">#55022 - Issue with impl Trait and panic!()</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/54899"
+        title="ICE with existential associated type">#54899 - ICE with existential associated type</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/54895"
+        title="ICE when using anonymization in impl Trait with HRTB">#54895 - ICE when using anonymization in impl Trait with HRTB</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/54840"
+        title="ICE when trying to use &amp;impl in a binding">#54840 - ICE when trying to use &amp;impl in a binding</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/54771"
+        title="Poor Trailing Semicolon Error in -&gt; impl Trait Function">#54771 - Poor Trailing Semicolon Error in -&gt; impl Trait Function</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/54729"
+        title="Wrong type inference for closure with impl Trait inside another type">#54729 - Wrong type inference for closure with impl Trait inside another type</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/54600"
+        title="&#96;impl_trait_in_bindings&#96; fails with &#96;Option&lt;impl Trait&gt;&#96;">#54600 - <code>impl_trait_in_bindings</code> fails with <code>Option&lt;impl Trait&gt;</code></a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/54560"
+        title="Confusing error message for &#96;impl Trait&#96; consts&#x2F;statics that use generics">#54560 - Confusing error message for <code>impl Trait</code> consts&#x2F;statics that use generics</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/54385"
+        title="&#96;impl Trait&#96; should be able to capture long-lived associated types even if the trait contains a lifetime">#54385 - <code>impl Trait</code> should be able to capture long-lived associated types even if the trait contains a lifetime</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/54169"
+        title="ICE in existential type with lifetime in trait implementation">#54169 - ICE in existential type with lifetime in trait implementation</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/53984"
+        title="impl Trait with associated type equality constraint fails to resolve when constraint contains associated type of non-parameter type">#53984 - impl Trait with associated type equality constraint fails to resolve when constraint contains associated type of non-parameter type</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/53920"
+        title="ICE: Cannot create local mono-item within future returned as impl trait">#53920 - ICE: Cannot create local mono-item within future returned as impl trait</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/53613"
+        title="Lifetimes get replaced with &#x27;static in Self within (return position) impl Trait.">#53613 - Lifetimes get replaced with &#x27;static in Self within (return position) impl Trait.</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/53398"
+        title="existential types cannot be defined in terms of themselves at all">#53398 - existential types cannot be defined in terms of themselves at all</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/53092"
+        title="FullfillmentError ICE with const fn and existential type">#53092 - FullfillmentError ICE with const fn and existential type</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/52901"
+        title="Bad error message with wrong &#96;impl trait&#96;-parameter on trait implementation">#52901 - Bad error message with wrong <code>impl trait</code>-parameter on trait implementation</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/52843"
+        title="ICE on unsound usage of existential types">#52843 - ICE on unsound usage of existential types</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/52304"
+        title="Compiler panic on type inference for impl Generator yielding a reference">#52304 - Compiler panic on type inference for impl Generator yielding a reference</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/51616"
+        title="Wrong lifetime is inferred in the argument of closure when given more specific type.">#51616 - Wrong lifetime is inferred in the argument of closure when given more specific type.</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/51525"
+        title="existential impl trait overlooks &quot;hidden&quot; lifetimes from projections">#51525 - existential impl trait overlooks &quot;hidden&quot; lifetimes from projections</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/49431"
+        title="Confusing error message when returning impl Trait with multiple lifetimes">#49431 - Confusing error message when returning impl Trait with multiple lifetimes</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/49288"
+        title="&#96;impl Trait&#96; Associated Types Do Not Leak Auto Traits">#49288 - <code>impl Trait</code> Associated Types Do Not Leak Auto Traits</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/49287"
+        title="Argument-position &#96;impl Trait&#96; requires a named lifetime">#49287 - Argument-position <code>impl Trait</code> requires a named lifetime</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/48290"
+        title="Confusing Error Message with Impl Trait in E0308">#48290 - Confusing Error Message with Impl Trait in E0308</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/47348"
+        title=" impl Trait feature is not make code easy">#47348 -  impl Trait feature is not make code easy</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/46644"
+        title="Compiler incorrectly reports function return type declaration as source of inner type mismatch with conservative_impl_trait">#46644 - Compiler incorrectly reports function return type declaration as source of inner type mismatch with conservative_impl_trait</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/45994"
+        title="[impl Trait] Should we allow &#96;impl Trait&#96; after &#96;-&gt;&#96; in &#96;fn&#96; types or parentheses sugar?">#45994 - [impl Trait] Should we allow <code>impl Trait</code> after <code>-&gt;</code> in <code>fn</code> types or parentheses sugar?</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/44530"
+        title="Return type that doesn&#x27;t satisfy &#96;impl Trait&#96; messages should point out the reason">#44530 - Return type that doesn&#x27;t satisfy <code>impl Trait</code> messages should point out the reason</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/42940"
+        title="impl-trait return type is bounded by all input type parameters, even when unnecessary">#42940 - impl-trait return type is bounded by all input type parameters, even when unnecessary</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/42451"
+        title="With impl trait, some variables are not recognised as &#96;&#x27;static&#96; when used with &#96;AsRef&#96;.">#42451 - With impl trait, some variables are not recognised as <code>&#x27;static</code> when used with <code>AsRef</code>.</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/41407"
+        title="type mismatch resolving &#96;&lt;Thing as FromStr&gt;::Err == &lt;Thing as FromStr&gt;::Err&#96;, with impl trait">#41407 - type mismatch resolving <code>&lt;Thing as FromStr&gt;::Err == &lt;Thing as FromStr&gt;::Err</code>, with impl trait</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/37454"
+        title="Option + impl Trait = uncompilable code (?)">#37454 - Option + impl Trait = uncompilable code (?)</a>
+  </li>
+              
+  <li>
+    <a class=""
+        href="https://github.com/rust-lang/rust/issues/36375"
+        title="&#96;impl Trait&#96; fails to resolve when returning &#96;!&#96;">#36375 - <code>impl Trait</code> fails to resolve when returning <code>!</code></a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/65679"
+        title="ICE when aliasing impl Future">#65679 - ICE when aliasing impl Future</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/65582"
+        title="Non-&#96;&#x27;static&#96; lifetime inferred for return position &#96;impl Trait&#96; (fixed in beta)">#65582 - Non-<code>&#x27;static</code> lifetime inferred for return position <code>impl Trait</code> (fixed in beta)</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/64565"
+        title="Invalid bound suggestion for argument-position impl trait">#64565 - Invalid bound suggestion for argument-position impl trait</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/64338"
+        title="Ffi safe lint ICE with type alias impl trait">#64338 - Ffi safe lint ICE with type alias impl trait</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/63794"
+        title="unimplemented macro doesnt compile with RPIT">#63794 - unimplemented macro doesnt compile with RPIT</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/63706"
+        title="rustc suggests invalid syntax for missing method on &#96;impl Trait&#96; parameter">#63706 - rustc suggests invalid syntax for missing method on <code>impl Trait</code> parameter</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/63677"
+        title="rustc crash with type alias of impl trait">#63677 - rustc crash with type alias of impl trait</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/63167"
+        title="Confusing error message with type unification of impl Traits">#63167 - Confusing error message with type unification of impl Traits</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/61903"
+        title="Unable to return an impl Fn&#x2F;FnMut&#x2F;FnOnce that takes a concrete associated type">#61903 - Unable to return an impl Fn&#x2F;FnMut&#x2F;FnOnce that takes a concrete associated type</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/61863"
+        title="Trying to use same existential type for two functions cause cycle dependency">#61863 - Trying to use same existential type for two functions cause cycle dependency</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/60662"
+        title="HIR printing of &#96;existential type&#96; is broken">#60662 - HIR printing of <code>existential type</code> is broken</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/60655"
+        title="&#96;existential type&#96; complains about &#96;&#x27;_&#96; in concrete type of self-borrowing generators">#60655 - <code>existential type</code> complains about <code>&#x27;_</code> in concrete type of self-borrowing generators</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/60564"
+        title="ICE with associated existential type">#60564 - ICE with associated existential type</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/60414"
+        title="Using associated types in async fn type break typing">#60414 - Using associated types in async fn type break typing</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/60407"
+        title="ICE with existential_type feature">#60407 - ICE with existential_type feature</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/60371"
+        title="Existential type ICE without feature specified">#60371 - Existential type ICE without feature specified</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/60367"
+        title="impl_trait_in_bindings: Use function return type for binding?">#60367 - impl_trait_in_bindings: Use function return type for binding?</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/59115"
+        title="Tracking issue for omit From::from from &#96;?&#96; lowering for existentials">#59115 - Tracking issue for omit From::from from <code>?</code> lowering for existentials</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/59085"
+        title="Type alias used in async fn return type is wrongly reported unused">#59085 - Type alias used in async fn return type is wrongly reported unused</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/59022"
+        title="&#96;-&gt; impl Fn()&#96; fails with closures used as &#96;FnMut&#96; but actually Fn">#59022 - <code>-&gt; impl Fn()</code> fails with closures used as <code>FnMut</code> but actually Fn</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/58951"
+        title="ICE with &#96;#![feature(existential_type)]&#96; + closure">#58951 - ICE with <code>#![feature(existential_type)]</code> + closure</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/58887"
+        title="ICE in typeck on existential return type in trait">#58887 - ICE in typeck on existential return type in trait</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/58708"
+        title="impl trait from unboxed_closure does not accept closures">#58708 - impl trait from unboxed_closure does not accept closures</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/58344"
+        title="ICE on generic impl trait convergence">#58344 - ICE on generic impl trait convergence</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/57979"
+        title="Regression from stable to nightly: nested impl trait is not allowed">#57979 - Regression from stable to nightly: nested impl trait is not allowed</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/57933"
+        title="The scope of associated existential types">#57933 - The scope of associated existential types</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/57700"
+        title="ICE when returning generic abitrary self type in defining function for existential associated type">#57700 - ICE when returning generic abitrary self type in defining function for existential associated type</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/57678"
+        title="Existential types: Unused closure environment is part of concrete type">#57678 - Existential types: Unused closure environment is part of concrete type</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/57464"
+        title="Nightly rustc crashes with &quot;unexpected region in query response&quot;">#57464 - Nightly rustc crashes with &quot;unexpected region in query response&quot;</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/56046"
+        title="Tracking issue for &#96;Captures&#96; trait">#56046 - Tracking issue for <code>Captures</code> trait</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/55903"
+        title="ICE: &quot;unexpected predicate&quot; when using multiple lifetime parameters in existential type">#55903 - ICE: &quot;unexpected predicate&quot; when using multiple lifetime parameters in existential type</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/55872"
+        title="ICE: Type parameter W&#x2F;#1 out of range when substituting">#55872 - ICE: Type parameter W&#x2F;#1 out of range when substituting</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/55608"
+        title="ICE on stable &#x2F; nightly: ReEmpty">#55608 - ICE on stable &#x2F; nightly: ReEmpty</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/55027"
+        title="&quot;trait is not implemented&quot; error when returning &quot;impl Trait&quot; hides a more useful error">#55027 - &quot;trait is not implemented&quot; error when returning &quot;impl Trait&quot; hides a more useful error</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/54593"
+        title="NLL type-checking ICEs on closure recursing on impl Trait-returning enclosing function.">#54593 - NLL type-checking ICEs on closure recursing on impl Trait-returning enclosing function.</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/54234"
+        title="Incorrect warning: type alias is never used">#54234 - Incorrect warning: type alias is never used</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/54045"
+        title="Regression in #[allow(deprecated)] for &#96;impl Trait&#96; return type">#54045 - Regression in #[allow(deprecated)] for <code>impl Trait</code> return type</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/53791"
+        title="existential impl Trait gets seriously confused about lifetimes, &quot;impl T + &#x27;static&quot; does not satisfy static lifetime">#53791 - existential impl Trait gets seriously confused about lifetimes, &quot;impl T + &#x27;static&quot; does not satisfy static lifetime</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/53690"
+        title="async fn cannot be recursive">#53690 - async fn cannot be recursive</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/53598"
+        title="ICE: Existential type (w&#x2F; and w&#x2F;o NLL)">#53598 - ICE: Existential type (w&#x2F; and w&#x2F;o NLL)</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/53546"
+        title="Existential type complains about private type in public interface if concrete type is not pub">#53546 - Existential type complains about private type in public interface if concrete type is not pub</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/53457"
+        title="non-defining existential type use in defining scope with empty lifetime name">#53457 - non-defining existential type use in defining scope with empty lifetime name</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/53443"
+        title="ICE when existential type is exported from one crate and used in another">#53443 - ICE when existential type is exported from one crate and used in another</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/53345"
+        title="Implementing trait for Existential type ICE&#x27;s">#53345 - Implementing trait for Existential type ICE&#x27;s</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/53096"
+        title="ICE 2018 edition with const fn and existential type">#53096 - ICE 2018 edition with const fn and existential type</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/53090"
+        title="&#96;existential type&#96; can accept generic bounds that do not specify a trait">#53090 - <code>existential type</code> can accept generic bounds that do not specify a trait</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/53087"
+        title="ICE with const transmute and existential type">#53087 - ICE with const transmute and existential type</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/52985"
+        title="Existential type ICE">#52985 - Existential type ICE</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/52701"
+        title="infinite recursion ICE">#52701 - infinite recursion ICE</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/52632"
+        title="Existential type can have inconsistent concrete type">#52632 - Existential type can have inconsistent concrete type</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/52376"
+        title="Rustdoc not showing return type but showing return type lifetimes">#52376 - Rustdoc not showing return type but showing return type lifetimes</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/51282"
+        title="impl Trait return value infers &#x27;static lifetime">#51282 - impl Trait return value infers &#x27;static lifetime</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/51069"
+        title="impl Trait return value causes an over-restricted lifetime requirement">#51069 - impl Trait return value causes an over-restricted lifetime requirement</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/50950"
+        title="Able to use the turbofish syntax with impl trait for methods">#50950 - Able to use the turbofish syntax with impl trait for methods</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/50881"
+        title="ICE using function pointer to function returning &#96;impl Iterator&lt;Item = &amp;&amp;&#x27;a str&gt;&#96;">#50881 - ICE using function pointer to function returning <code>impl Iterator&lt;Item = &amp;&amp;&#x27;a str&gt;</code></a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/50865"
+        title="Compiler crashed with cannot create local mono-item">#50865 - Compiler crashed with cannot create local mono-item</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/50823"
+        title="impl Trait causes &quot;borrowed value does not live long enough&quot;">#50823 - impl Trait causes &quot;borrowed value does not live long enough&quot;</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/50817"
+        title="Wrong suggestion for fixing argument-position &#96;impl Trait&#96;">#50817 - Wrong suggestion for fixing argument-position <code>impl Trait</code></a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/50652"
+        title="Regression in return type error quality with impl trait">#50652 - Regression in return type error quality with impl trait</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/50626"
+        title="impl Trait binary operations">#50626 - impl Trait binary operations</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/50358"
+        title="rustdoc panic while documenting impl trait in argument position">#50358 - rustdoc panic while documenting impl trait in argument position</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/49926"
+        title="impossible case reached on lifetime inference for impl Trait in return position">#49926 - impossible case reached on lifetime inference for impl Trait in return position</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/49685"
+        title="[ICE] librustc_traits&#x2F;normalize_erasing_regions.rs:46: could not fully normalize &#96;...&#96;">#49685 - [ICE] librustc_traits&#x2F;normalize_erasing_regions.rs:46: could not fully normalize <code>...</code></a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/49376"
+        title="rustc has a stack overflow when using &#96;impl Trait&#96; of a trait with a generic parameter with a default type of Self">#49376 - rustc has a stack overflow when using <code>impl Trait</code> of a trait with a generic parameter with a default type of Self</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/48467"
+        title="impl trait error message around &#96;&#x27;static&#96; is probably confusing">#48467 - impl trait error message around <code>&#x27;static</code> is probably confusing</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/48140"
+        title="ICE with conservative_impl_trait">#48140 - ICE with conservative_impl_trait</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/47764"
+        title="ICE with &#96;impl FnOnce...&#96; in argument position. Unexpected panic.">#47764 - ICE with <code>impl FnOnce...</code> in argument position. Unexpected panic.</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/47715"
+        title="Compiler crash when using impl Trait to bound associated type parameter">#47715 - Compiler crash when using impl Trait to bound associated type parameter</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/47422"
+        title="missing specialization: &#96;&lt;encoder::EncodeContext as SpecializedEncoder&lt;rustc::hir::def_id::LocalDefId&gt;&gt;::specialized_encode&#96; not overriden">#47422 - missing specialization: <code>&lt;encoder::EncodeContext as SpecializedEncoder&lt;rustc::hir::def_id::LocalDefId&gt;&gt;::specialized_encode</code> not overriden</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/46976"
+        title="Rustdoc ICE with argument position impl Trait">#46976 - Rustdoc ICE with argument position impl Trait</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/46959"
+        title="Universal impl trait shows camel case name warning">#46959 - Universal impl trait shows camel case name warning</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/46685"
+        title="ICE combining universal plus existential impl Trait">#46685 - ICE combining universal plus existential impl Trait</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/46541"
+        title="🚀 existential impl Trait allows lifetimes that would not be allowed by abstract type">#46541 - 🚀 existential impl Trait allows lifetimes that would not be allowed by abstract type</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/46504"
+        title="Compiler error: returning impl Generator">#46504 - Compiler error: returning impl Generator</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/46476"
+        title="ICE when using &#96;impl Iterator&lt;Item = &amp;&#x27;a Path&gt; + &#x27;a&#96;">#46476 - ICE when using <code>impl Iterator&lt;Item = &amp;&#x27;a Path&gt; + &#x27;a</code></a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/46470"
+        title="[ICE] with conservative_impl_trait and universal_impl_trait">#46470 - [ICE] with conservative_impl_trait and universal_impl_trait</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/46469"
+        title="[ICE] with universal_impl_trait">#46469 - [ICE] with universal_impl_trait</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/46468"
+        title="[ICE] with underscore_lifetimes">#46468 - [ICE] with underscore_lifetimes</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/46464"
+        title="Nested &quot;impl trait&quot; with lifetimes causing internal compiler error">#46464 - Nested &quot;impl trait&quot; with lifetimes causing internal compiler error</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/46456"
+        title="&#96;librustc_trans_utils&#x2F;collector.rs:743: Cannot create local trans-item for DefId(11&#x2F;0:54 ~ stpl[d907]::html[0]::h1[0])&#96;">#46456 - <code>librustc_trans_utils&#x2F;collector.rs:743: Cannot create local trans-item for DefId(11&#x2F;0:54 ~ stpl[d907]::html[0]::h1[0])</code></a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/45800"
+        title="Link error with incremental and impl trait">#45800 - Link error with incremental and impl trait</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/45690"
+        title="ICE with conservative_impl_trait">#45690 - ICE with conservative_impl_trait</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/44956"
+        title="Rustc nightly 2017-09-19 crashes because of impl Iterator with reference Item">#44956 - Rustc nightly 2017-09-19 crashes because of impl Iterator with reference Item</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/44923"
+        title="Purely-diverging functions cannot return &#96;impl Trait&#96;.">#44923 - Purely-diverging functions cannot return <code>impl Trait</code>.</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/44721"
+        title="impl Trait in argument position ">#44721 - impl Trait in argument position </a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/44686"
+        title="Tracking issue for impl trait in const&#x2F;static&#x2F;let">#44686 - Tracking issue for impl trait in const&#x2F;static&#x2F;let</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/44685"
+        title="Tracking issue for existential types (RFC 2071)">#44685 - Tracking issue for existential types (RFC 2071)</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/44437"
+        title="None.unwrap() in FnCtxt::instantiate_anon_types">#44437 - None.unwrap() in FnCtxt::instantiate_anon_types</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/44198"
+        title="Impl Trait ICE: escaping regions in predicate">#44198 - Impl Trait ICE: escaping regions in predicate</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/44181"
+        title="ICE with generators and impl Trait: &quot;Cannot create local trans-item&quot;">#44181 - ICE with generators and impl Trait: &quot;Cannot create local trans-item&quot;</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/43774"
+        title="error: internal compiler error: unexpected panic">#43774 - error: internal compiler error: unexpected panic</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/43719"
+        title="&quot;only named lifetimes allowed in impl Trait&quot; could have a better error message">#43719 - &quot;only named lifetimes allowed in impl Trait&quot; could have a better error message</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/43718"
+        title="ICE: escaping regions in predicate Obligation(...)">#43718 - ICE: escaping regions in predicate Obligation(...)</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/43263"
+        title="Recursive impl-trait type causes compiler stack overflow">#43263 - Recursive impl-trait type causes compiler stack overflow</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/43135"
+        title="Using impl Trait with closure local functions across crates results in ICE">#43135 - Using impl Trait with closure local functions across crates results in ICE</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/43073"
+        title="ICE with impl_trait">#43073 - ICE with impl_trait</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/43021"
+        title="compiler panic impl Trait">#43021 - compiler panic impl Trait</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/42399"
+        title="ICE in conservative_impl_trait over VecDeque&lt;String&gt; Iterator">#42399 - ICE in conservative_impl_trait over VecDeque&lt;String&gt; Iterator</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/42183"
+        title="Tracking issue for RFC 1951: Finalize syntax and parameter scoping for &#96;impl Trait&#96;, while expanding it to arguments">#42183 - Tracking issue for RFC 1951: Finalize syntax and parameter scoping for <code>impl Trait</code>, while expanding it to arguments</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/41297"
+        title="impl Future used across crate boundaries produces an error">#41297 - impl Future used across crate boundaries produces an error</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/41182"
+        title="[ICE] [conservative_impl_trait] escaping regions in predicate">#41182 - [ICE] [conservative_impl_trait] escaping regions in predicate</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/39639"
+        title="&#x27;rustc&#x27; has overflowed its stack error">#39639 - &#x27;rustc&#x27; has overflowed its stack error</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/38064"
+        title="Infinite size checker doesn&#x27;t see through impl Trait, leading to rustc overflow">#38064 - Infinite size checker doesn&#x27;t see through impl Trait, leading to rustc overflow</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/37790"
+        title="Borrowing issue with impl Trait leads to unergonomic verbosity">#37790 - Borrowing issue with impl Trait leads to unergonomic verbosity</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/37096"
+        title="ICE: &quot;Unexpected tail in unsized_info_ty&quot; when using impl Trait">#37096 - ICE: &quot;Unexpected tail in unsized_info_ty&quot; when using impl Trait</a>
+  </li>
+              
+  <li>
+    <a class="closed"
+        href="https://github.com/rust-lang/rust/issues/35870"
+        title="Using impl trait across crates results in linker error">#35870 - Using impl trait across crates results in linker error</a>
+  </li>
+          </ul>
+        </details>
+    </li>
+</ul>
+<h3>Future extensions</h3>
+<ul id="async-extensions">
+  
+    <li>
+      <code>async fn</code> in trait method
+        <span class="not-stabilized">not stabilized yet</span>
+        <ul class="deps">
+          
+    <li>
+      Workaround is available as an attribute macro:
+        <a href="https:&#x2F;&#x2F;github.com&#x2F;dtolnay&#x2F;async-trait"><code>async-trait</code></a>
+    <li>
+      Generic associated types (GAT)
+        <span class="not-stabilized">not stabilized yet</span>
+        /
+        <a class="rfc"
+          href="https:&#x2F;&#x2F;rust-lang.github.io&#x2F;rfcs&#x2F;1598-generic_associated_types.html"
+          title="Generic associated types (associated type constructors)">RFC 1598</a>
+        /
+        <a
+          class="tracking"
+          href="https://github.com/rust-lang/rust/issues/44265"
+          title="🔬 Tracking issue for generic associated types (GAT)"
+        >#44265</a>
+    </li>
+    <li>
+      Named existentials and impl Trait variable declarations
+        <span class="not-stabilized">not stabilized yet</span>
+        /
+        <a class="rfc"
+          href="https:&#x2F;&#x2F;rust-lang.github.io&#x2F;rfcs&#x2F;2071-impl-trait-existential-types.html"
+          title="Named existentials and impl Trait variable declarations">RFC 2071</a>
+        /
+        <a
+          class="tracking"
+          href="https://github.com/rust-lang/rust/issues/34511"
+          title="Tracking issue for &#96;impl Trait&#96; (RFC 1522, RFC 1951, RFC 2071)"
+        >#34511</a>
+    </li>
+        </ul>
+    </li>
+    <li>
+      Async iterators or stream
+        <a class="unresolved"
+          href="https:&#x2F;&#x2F;rust-lang.github.io&#x2F;rfcs&#x2F;2394-async_await.html#generators-and-streams"
+          title="async&#x2F;await notation for ergonomic asynchronous IO">unresolved</a>
+    <li>
+      Async closures
+        <span class="not-stabilized">not stabilized yet</span>
+        /
+        <a class="rfc"
+          href="https:&#x2F;&#x2F;rust-lang.github.io&#x2F;rfcs&#x2F;2394-async_await.html#async--closures"
+          title="async&#x2F;await notation for ergonomic asynchronous IO">RFC 2394</a>
+    </li>
+</ul>
+<h2><code>async</code> ecosystem</h2>
+<ul id="async-ecosystem">
+  <li>
+    <a href="https://crates.io/crates/tokio">tokio</a> -
+    An event-driven, non-blocking I/O platform for writing asynchronous applications.
+    It has <code>async</code>/<code>await</code> support starting from 0.2.0-alpha.1
+    <a href="https://github.com/tokio-rs/tokio/issues/1201">#1201</a>
+  </li>
+  <li>
+    <a href="https://crates.io/crates/romio">romio</a> -
+    A fork of tokio compatible with the new futures API
+    as well as the <code>async</code>/<code>await</code> syntax
+    to enable people to experiment with the new syntax.
+  </li>
+  <li>
+    <a href="https://crates.io/crates/thin_main_loop">thin_main_loop</a> -
+    An experimental, cross platform, main loop and futures executor/reactor, 
+    that binds to the OS APIs suitable for making native GUI applications. 
+    It supports callbacks as well as the <code>async</code>/<code>await</code> syntax.
+  </li>
+  <li>
+    <a href="https://crates.io/crates/runtime">runtime</a> -
+    A platform-agnostic library that intends
+    to make async Rust both flexible and easy.
+    It was announced by the Async Ecosystem WG as
+    an exploration towards ecosystem standardization.
+  </li>
+  <li>
+    <a href="https://crates.io/crates/async-std">async-std</a> -
+    Async version of the Rust standard library.
+  </li>
+  <li>
+    <a href="https://crates.io/crates/async-task">async-task</a> -
+    Task abstraction for building executors.
+  </li>
+</ul>
+<h2>Posts about <code>async</code></h2>
+<ul id="async-posts">
+    <li><a href="http:&#x2F;&#x2F;smallcultfollowing.com&#x2F;babysteps&#x2F;blog&#x2F;2019&#x2F;10&#x2F;26&#x2F;async-fn-in-traits-are-hard&#x2F;">why async fn in traits are hard</a> - 2019-10-26</li>
+    <li><a href="https:&#x2F;&#x2F;boats.gitlab.io&#x2F;blog&#x2F;post&#x2F;poll-drop&#x2F;">Asynchronous Destructors</a> - 2019-10-16</li>
+    <li><a href="https:&#x2F;&#x2F;blog.rust-lang.org&#x2F;inside-rust&#x2F;2019&#x2F;10&#x2F;11&#x2F;AsyncAwait-Not-Send-Error-Improvements.html">Improving async-await&#x27;s &quot;Future is not Send&quot; diagnostic</a> - 2019-10-11</li>
+    <li><a href="https:&#x2F;&#x2F;blog.rust-lang.org&#x2F;inside-rust&#x2F;2019&#x2F;10&#x2F;07&#x2F;AsyncAwait-WG-Focus-Issues.html">Async Foundations Update: Time for polish!</a> - 2019-10-07</li>
+    <li><a href="https:&#x2F;&#x2F;tmandry.gitlab.io&#x2F;blog&#x2F;posts&#x2F;optimizing-await-2&#x2F;">How Rust optimizes async&#x2F;await II: Program analysis</a> - 2019-09-02</li>
+    <li><a href="https:&#x2F;&#x2F;tmandry.gitlab.io&#x2F;blog&#x2F;posts&#x2F;optimizing-await-1&#x2F;">How Rust optimizes async&#x2F;await I</a> - 2019-08-18</li>
+    <li><a href="http:&#x2F;&#x2F;smallcultfollowing.com&#x2F;babysteps&#x2F;blog&#x2F;2019&#x2F;07&#x2F;08&#x2F;async-await-status-report-2&#x2F;">Async-await status report #2</a> - 2019-07-08</li>
+    <li><a href="https:&#x2F;&#x2F;boats.gitlab.io&#x2F;blog&#x2F;post&#x2F;await-decision-ii&#x2F;">Update on await syntax</a> - 2019-05-28</li>
+    <li><a href="https:&#x2F;&#x2F;boats.gitlab.io&#x2F;blog&#x2F;post&#x2F;await-decision&#x2F;">A final proposal for await syntax</a> - 2019-05-06</li>
+    <li><a href="https:&#x2F;&#x2F;www.youtube.com&#x2F;watch?v=skos4B5x7qE">RustLatam 2019 - Without Boats: Zero-Cost Async IO [video]</a> - 2019-04-19</li>
+    <li><a href="http:&#x2F;&#x2F;smallcultfollowing.com&#x2F;babysteps&#x2F;blog&#x2F;2019&#x2F;03&#x2F;01&#x2F;async-await-status-report&#x2F;">Async-await status report</a> - 2019-03-01</li>
+    <li><a href="https:&#x2F;&#x2F;blog.yoshuawuyts.com&#x2F;async-ecosystem-wg&#x2F;">Async Ecosystem WG</a> - 2019-02-27</li>
+    <li><a href="https:&#x2F;&#x2F;boats.gitlab.io&#x2F;blog&#x2F;post&#x2F;wakers-ii&#x2F;">The Waker API II: waking across threads</a> - 2019-01-11</li>
+    <li><a href="https:&#x2F;&#x2F;boats.gitlab.io&#x2F;blog&#x2F;post&#x2F;wakers-i&#x2F;">The Waker API I: what does a waker do?</a> - 2019-01-07</li>
+    <li><a href="https:&#x2F;&#x2F;rustasync.github.io&#x2F;team&#x2F;2018&#x2F;12&#x2F;13&#x2F;async-update.html">Async in Rust, circa 2018</a> - 2018-12-13</li>
+    <li><a href="https:&#x2F;&#x2F;blag.nemo157.com&#x2F;2018&#x2F;12&#x2F;09&#x2F;inside-rusts-async-transform.html">Inside Rust&#x27;s Async Transform</a> - 2018-12-09</li>
+    <li><a href="https:&#x2F;&#x2F;boats.gitlab.io&#x2F;blog&#x2F;post&#x2F;romio&#x2F;">Wherefore art thou Romio?</a> - 2018-12-05</li>
+    <li><a href="https:&#x2F;&#x2F;www.youtube.com&#x2F;watch?v=9_3krAQtD2k">The What and How of Futures and async&#x2F;await in Rust [video]</a> - 2018-11-17</li>
+    <li><a href="https:&#x2F;&#x2F;boats.gitlab.io&#x2F;blog&#x2F;post&#x2F;await-syntax&#x2F;">Making progress in await syntax</a> - 2018-11-08</li>
+    <li><a href="https:&#x2F;&#x2F;tokio.rs&#x2F;blog&#x2F;2018-08-async-await&#x2F;">Experimental async &#x2F; await support for Tokio</a> - 2018-08-27</li>
+    <li><a href="https:&#x2F;&#x2F;boats.gitlab.io&#x2F;blog&#x2F;post&#x2F;rethinking-pin&#x2F;">Another look at the pinning API</a> - 2018-08-22</li>
+    <li><a href="https:&#x2F;&#x2F;boats.gitlab.io&#x2F;blog&#x2F;post&#x2F;async-methods-ii&#x2F;">Async Methods II: object safety</a> - 2018-06-04</li>
+    <li><a href="https:&#x2F;&#x2F;boats.gitlab.io&#x2F;blog&#x2F;post&#x2F;async-methods-i&#x2F;">Async Methods I: generic associated types</a> - 2018-05-31</li>
+    <li><a href="https:&#x2F;&#x2F;aturon.github.io&#x2F;tech&#x2F;2018&#x2F;04&#x2F;24&#x2F;async-borrowing&#x2F;">Borrowing in async code</a> - 2018-04-24</li>
+    <li><a href="https:&#x2F;&#x2F;boats.gitlab.io&#x2F;blog&#x2F;post&#x2F;2018-04-06-async-await-final&#x2F;">Async &amp; Await in Rust: a full proposal</a> - 2018-04-06</li>
+    <li><a href="https:&#x2F;&#x2F;boats.gitlab.io&#x2F;blog&#x2F;post&#x2F;2018-03-20-async-vi&#x2F;">Async&#x2F;Await VI: 6 weeks of great progress</a> - 2018-03-20</li>
+    <li><a href="https:&#x2F;&#x2F;boats.gitlab.io&#x2F;blog&#x2F;post&#x2F;2018-02-08-async-v-getting-back-to-the-futures&#x2F;">Async&#x2F;Await V: Getting back to the futures</a> - 2018-02-08</li>
+    <li><a href="https:&#x2F;&#x2F;boats.gitlab.io&#x2F;blog&#x2F;post&#x2F;2018-02-07-async-iv-an-even-better-proposal&#x2F;">Async&#x2F;Await IV: An Even Better Proposal</a> - 2018-02-07</li>
+    <li><a href="https:&#x2F;&#x2F;boats.gitlab.io&#x2F;blog&#x2F;post&#x2F;2018-01-30-async-iii-moving-forward&#x2F;">Async&#x2F;Await III: Moving Forward with Something Shippable</a> - 2018-02-04</li>
+    <li><a href="https:&#x2F;&#x2F;boats.gitlab.io&#x2F;blog&#x2F;post&#x2F;2018-01-30-async-ii-narrowing-the-scope&#x2F;">Async&#x2F;Await II: Narrowing the Scope of the Problem</a> - 2018-01-31</li>
+    <li><a href="https:&#x2F;&#x2F;boats.gitlab.io&#x2F;blog&#x2F;post&#x2F;2018-01-25-async-i-self-referential-structs&#x2F;">Async&#x2F;Await I: Self-Referential Structs</a> - 2018-01-25</li>
+    <li><a href="https:&#x2F;&#x2F;aturon.github.io&#x2F;blog&#x2F;2016&#x2F;08&#x2F;11&#x2F;futures&#x2F;">Zero-cost futures in Rust</a> - 2016-08-11</li>
+</ul>
+<footer>Generated at Sun, 27 Oct 2019 16:26:06 +0000</footer>
+<a class="github-ribbon" href="https://github.com/rustasync/areweasyncyet.rs">Fork me on GitHub</a>
+</body>
+</html>
